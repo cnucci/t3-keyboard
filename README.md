@@ -1,15 +1,14 @@
 # T3 Keyboard
 
-The T3 Keyboard provides a fast and intuitive method for textual imput on the Pebble smartwatch.
+The T3 Keyboard provides a fast and intuitive method for textual input on the Pebble smartwatch.
 
 # Usage
 
-1. Add T3Window.h and T3Window.c to your Pebble project.
-2. Include T3Window.h on the file that uses the T3 Keyboard.
+#### 1. Add T3Window.h and T3Window.c to your Pebble project.
 ```c
 #include "T3Window.h"
 ```
-3. Define keyboard sets and layouts:
+#### 2. Define keyboard sets and layouts:
 ```c
 const char MY_KEYBOARD_LAYOUT[] =
     "abc\0"  "def\0"  "ghi\0"
@@ -23,13 +22,13 @@ const char * keyboardSet1[] = {T3_KB_LOWERCASE, T3_KB_UPPERCASE};
 const char * keyboardSet2[] = {T3_KB_NUMBERS};
 const char * keyboardSet3[] = {T3_KB_SPECIAL1, T3_KB_SPECIAL2};
 ```
-4. Define a handler to get the inputted text:
+#### 3. Define a handler to get the inputted text:
 ```c
 void myCloseHandler(const char * text) {
     // Do something
 }
 ```
-5. Create the window and show it:
+#### 4. Create the window and show it:
 ```c
 T3Window * myT3Window = t3window_create(
     keyboardSet1, 2,
@@ -54,6 +53,7 @@ A keyboard layout is defined by a 36-character string: Nine key definitions, eac
 ## Constants
 ### const char T3_LAYOUT_LOWERCASE
 This is a pre-defined keyboard layout with lower-case letters.
+
 ||||
 |:-:|:-:|:-:|
 |abc|def|ghi|
@@ -62,6 +62,7 @@ This is a pre-defined keyboard layout with lower-case letters.
 
 ### const char T3_LAYOUT_UPPERCASE
 This is a pre-defined keyboard layout with upper-case letters.
+
 ||||
 |:-:|:-:|:-:|
 |ABC|DEF|GHI|
@@ -70,6 +71,7 @@ This is a pre-defined keyboard layout with upper-case letters.
 
 ### const char T3_LAYOUT_NUMBERS
 This is a pre-defined keyboard layout with numbers.
+
 ||||
 |:-:|:-:|:-:|
 |01|2|3|
@@ -78,6 +80,7 @@ This is a pre-defined keyboard layout with numbers.
 
 ### const char T3_LAYOUT_PUNC
 This is a pre-defined keyboard layout with punctuation, operators, etc.
+
 ||||
 |:-:|:-:|:-:|
 |.|'!|:;"|
@@ -86,6 +89,7 @@ This is a pre-defined keyboard layout with punctuation, operators, etc.
 
 ### const char T3_LAYOUT_BRACKETS
 This is a pre-defined keyboard with brackets, slashes, and other miscellaneous character.
+
 ||||
 |:-:|:-:|:-:|
 |()|<>|{}|
