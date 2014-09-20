@@ -88,7 +88,7 @@ This is a pre-defined keyboard layout with punctuation, operators, etc.
 |?|&%|+*=|
 
 ### const char T3_LAYOUT_BRACKETS
-This is a pre-defined keyboard with brackets, slashes, and other miscellaneous character.
+This is a pre-defined keyboard layout with brackets, slashes, and other miscellaneous characters.
 
 ||||
 |:-:|:-:|:-:|
@@ -100,7 +100,7 @@ This is a pre-defined keyboard with brackets, slashes, and other miscellaneous c
 The maximum number of characters that the user may enter. This is currently set to 24 and may be changed in the c-file.
 
 ### const bool T3_LOGGING
-Whether Whether diagnostic information of keyboard events should be logged. This is currently set to false and may be toggled in the c-file.
+Whether diagnostic information of keyboard events should be logged. This is currently set to false and may be toggled in the c-file.
 
 ## Structures
 ### T3Window
@@ -111,7 +111,7 @@ This holds information about the T3 Keyboard Window. It is created with ```t3win
 This is a handler that is fired when the user accepts their inputted text and closes the window.  This is specified during ```t3window_create()```
 
 |Parameter|Description|
-|-|-|
+|---|---|
 |text|The inputted text.|
 
 ## Functions
@@ -128,7 +128,7 @@ Creates a new T3Window, given the keyboard layouts and callback function.
 A keyboard set contains keyboard layouts. If a set contains multiple layouts, the user will be able to cycle through them by holding the UP, SELECT, or DOWN buttons. At least one keyboard layout must be defined and the first keyboard found, starting with set 1, will be shown by default.
 
 |Parameter|Description|
-|-|-|
+|---|---|
 |**set1**|A pointer to an array of strings containing the keyboard layouts that the user may cycle through using the UP button. This may be null.|
 |**count1**|The number of keyboard layouts in set1. This should be 0 if set1 is null.|
 |**set2**|A pointer to an array of strings containing the keyboard layouts that the user may cycle through using the SELECT button. This may be null.|
@@ -147,7 +147,7 @@ void t3window_destroy(T3Window * window)
 Destroys a ```T3Window``` previously created by ```t3window_create()```.
 
 |Parameter|Description|
-|-|-|
+|---|---|
 |**window**|The ```T3Window``` to destroy.|
 
 ### t3window_show
@@ -161,7 +161,7 @@ This call is equivalent to:
 window_stack_push(myT3Window->window, animated);
 ```
 |Parameter|Description|
-|-|-|
+|---|---|
 |**window**|The ```T3Window``` to display.|
 |**animated**|Whether to use the ```window_stack_push()``` animation.|
 
@@ -172,7 +172,7 @@ void t3window_set_text(T3Window * window, const char * text)
 Sets the input text in the ```T3Window```.
 
 |Parameter|Description|
-|-|-|
+|---|---|
 |**window**|The ```T3Window``` whose text to set.|
 |**text**|A pointer to the text to display. This will be copied locally, up to the ```T3_MAXLENGTH```, so a stack-allocated string may be used.|
 
@@ -183,7 +183,7 @@ const char * t3window_get_text(const T3Window * window)
 Gets the input text from the ```T3Window```.
 
 |Parameter|Description|
-|-|-|
+|---|---|
 |**window**|The ```T3Window``` whose text to get.|
 
 #### Returns
