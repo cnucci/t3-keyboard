@@ -112,8 +112,8 @@ This is a pre-defined keyboard layout with brackets, slashes, and other miscella
 ||||
 |:-:|:-:|:-:|
 |()|<>|{}|
-|/|\|[]|
-|&#124;_|~^&#96;|¢½|
+|/|\\|[]|
+|&#124;_|~^\`|¢½|
 
 ### const uint8_t T3_MAXLENGTH
 The maximum number of characters that the user may enter. This is currently set to 24 and may be changed in the c-file.
