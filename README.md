@@ -22,7 +22,7 @@ const char * keyboardSet1[] = {T3_KB_LOWERCASE, T3_KB_UPPERCASE};
 const char * keyboardSet2[] = {T3_KB_NUMBERS};
 const char * keyboardSet3[] = {T3_KB_SPECIAL1, T3_KB_SPECIAL2};
 ```
-#### 3. Define a handler to get the inputted text:
+#### 3. Define a handler to get the entered text:
 ```c
 void myCloseHandler(const char * text) {
     // Do something
@@ -55,22 +55,22 @@ A keyboard layout is defined by a 36-character string: Nine key definitions, eac
 Whether diagnostic information of keyboard events should be logged. To enable logging, set to 1.
 
 ### T3_INCLUDE_LAYOUT_LOWERCASE
-Whether to build the pre-defined lower-case keyboard into the app. It is recommended you set this to 0 if you are not using it.
+Whether to build the pre-defined lower-case keyboard into the app. It is recommended that you set this to 0 if you are not using it in order to reduce memory usage.
 
 ### T3_INCLUDE_LAYOUT_UPPERCASE
-Whether to build the pre-defined upper-case keyboard into the app. It is recommended you set this to 0 if you are not using it.
+Whether to build the pre-defined upper-case keyboard into the app. It is recommended that you set this to 0 if you are not using it in order to reduce memory usage.
 
 ### T3_INCLUDE_LAYOUT_NUMBERS
-Whether to build the pre-defined number keyboard into the app. It is recommended you set this to 0 if you are not using it.
+Whether to build the pre-defined number keyboard into the app. It is recommended that you set this to 0 if you are not using it in order to reduce memory usage.
 
 ### T3_INCLUDE_LAYOUT_PUNC
-Whether to build the pre-defined punctuation keyboard into the app. It is recommended you set this to 0 if you are not using it.
+Whether to build the pre-defined punctuation keyboard into the app. It is recommended that you set this to 0 if you are not using it in order to reduce memory usage.
 
 ### T3_INCLUDE_LAYOUT_BRACKETS
-Whether to build the pre-defined bracket keyboard into the app. It is recommended you set this to 0 if you are not using it.
+Whether to build the pre-defined bracket keyboard into the app. It is recommended that you set this to 0 if you are not using it in order to reduce memory usage.
 
 ## Constants
-### const char T3_LAYOUT_LOWERCASE
+### const char T3_LAYOUT_LOWERCASE[]
 This is a pre-defined keyboard layout with lower-case letters.
 
 ||||
@@ -79,7 +79,7 @@ This is a pre-defined keyboard layout with lower-case letters.
 |jkl|mno|pqr|
 |stu|vwx|yz |
 
-### const char T3_LAYOUT_UPPERCASE
+### const char T3_LAYOUT_UPPERCASE[]
 This is a pre-defined keyboard layout with upper-case letters.
 
 ||||
@@ -88,7 +88,7 @@ This is a pre-defined keyboard layout with upper-case letters.
 |JKL|MNO|PQR|
 |STU|VWX|YZ |
 
-### const char T3_LAYOUT_NUMBERS
+### const char T3_LAYOUT_NUMBERS[]
 This is a pre-defined keyboard layout with numbers.
 
 ||||
@@ -97,7 +97,7 @@ This is a pre-defined keyboard layout with numbers.
 |4|5|6|
 |7|8|9|
 
-### const char T3_LAYOUT_PUNC
+### const char T3_LAYOUT_PUNC[]
 This is a pre-defined keyboard layout with punctuation, operators, etc.
 
 ||||
@@ -106,7 +106,7 @@ This is a pre-defined keyboard layout with punctuation, operators, etc.
 |,|-|@$#|
 |?|&%|+*=|
 
-### const char T3_LAYOUT_BRACKETS
+### const char T3_LAYOUT_BRACKETS[]
 This is a pre-defined keyboard layout with brackets, slashes, and other miscellaneous characters.
 
 ||||
@@ -124,11 +124,11 @@ This holds information about the T3 Keyboard Window. It is created with ```t3win
 
 ### Handlers
 ### void (*T3CloseHandler)(const char * text)
-This is a handler that is fired when the user accepts their inputted text and closes the window.  This is specified during ```t3window_create()```
+This is a handler that is fired when the user accepts their entered text and closes the window.  It is used by ```t3window_create()```.
 
 |Parameter|Description|
 |---|---|
-|text|The inputted text.|
+|text|The entered text.|
 
 ## Functions
 ### t3window_create
@@ -185,7 +185,7 @@ window_stack_push(myT3Window->window, animated);
 ```c
 void t3window_set_text(T3Window * window, const char * text)
 ```
-Sets the input text in the ```T3Window```.
+Sets the initial entered text in the ```T3Window```.
 
 |Parameter|Description|
 |---|---|
@@ -196,7 +196,7 @@ Sets the input text in the ```T3Window```.
 ```c
 const char * t3window_get_text(const T3Window * window)
 ```
-Gets the input text from the ```T3Window```.
+Gets the entered text from the ```T3Window```.
 
 |Parameter|Description|
 |---|---|
