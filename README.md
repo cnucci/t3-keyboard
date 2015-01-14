@@ -50,6 +50,25 @@ A keyboard layout is defined by a 36-character string: Nine key definitions, eac
 > **null** := ```\0```
 
 # Interface Documentation
+## Macros
+### T3_LOGGING
+Whether diagnostic information of keyboard events should be logged. To enable logging, set to 1.
+
+### T3_INCLUDE_LAYOUT_LOWERCASE
+Whether to build the pre-defined lower-case keyboard into the app. It is recommended you set this to 0 if you are not using it.
+
+### T3_INCLUDE_LAYOUT_UPPERCASE
+Whether to build the pre-defined upper-case keyboard into the app. It is recommended you set this to 0 if you are not using it.
+
+### T3_INCLUDE_LAYOUT_NUMBERS
+Whether to build the pre-defined number keyboard into the app. It is recommended you set this to 0 if you are not using it.
+
+### T3_INCLUDE_LAYOUT_PUNC
+Whether to build the pre-defined punctuation keyboard into the app. It is recommended you set this to 0 if you are not using it.
+
+### T3_INCLUDE_LAYOUT_BRACKETS
+Whether to build the pre-defined bracket keyboard into the app. It is recommended you set this to 0 if you are not using it.
+
 ## Constants
 ### const char T3_LAYOUT_LOWERCASE
 This is a pre-defined keyboard layout with lower-case letters.
@@ -94,13 +113,10 @@ This is a pre-defined keyboard layout with brackets, slashes, and other miscella
 |:-:|:-:|:-:|
 |()|<>|{}|
 |/|\|[]|
-|&#124;_|~^`|¢½|
+|&#124;_|~^&#96;|¢½|
 
 ### const uint8_t T3_MAXLENGTH
 The maximum number of characters that the user may enter. This is currently set to 24 and may be changed in the c-file.
-
-### const bool T3_LOGGING
-Whether diagnostic information of keyboard events should be logged. This is currently set to false and may be toggled in the c-file.
 
 ## Structures
 ### T3Window

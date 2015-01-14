@@ -22,12 +22,49 @@
 #include <pebble.h>
 
 /**
+ * Whether diagnostic information of keyboard events should be logged.
+ */
+#define T3_LOGGING 0
+
+/**
+ * Whether to build the pre-defined lower-case keyboard into the app.
+ * It is recommended you set this to 0 if you are not using it.
+ */
+#define T3_INCLUDE_LAYOUT_LOWERCASE 1
+	
+/**
+ * Whether to build the pre-defined upper-case keyboard into the app.
+ * It is recommended you set this to 0 if you are not using it.
+ */
+#define T3_INCLUDE_LAYOUT_UPPERCASE 1
+	
+/**
+ * Whether to build the pre-defined number keyboard into the app.
+ * It is recommended you set this to 0 if you are not using it.
+ */
+#define T3_INCLUDE_LAYOUT_NUMBERS 1
+	
+/**
+ * Whether to build the pre-defined punctuation keyboard into the app.
+ * It is recommended you set this to 0 if you are not using it.
+ */
+#define T3_INCLUDE_LAYOUT_PUNC 1
+	
+/**
+ * Whether to build the pre-defined bracket keyboard into the app.
+ * It is recommended you set this to 0 if you are not using it.
+ */
+#define T3_INCLUDE_LAYOUT_BRACKETS 1
+
+/**
  * A pre-defined keyboard with lower-case letters and a space:
  *   abc  def  ghi
  *   jkl  mno  pqr
  *   stu  vwx  yz 
  */
+#if T3_INCLUDE_LAYOUT_LOWERCASE
 extern const char T3_LAYOUT_LOWERCASE[];
+#endif
 
 /**
  * A pre-defined keyboard with upper-case letters and a space:
@@ -35,7 +72,9 @@ extern const char T3_LAYOUT_LOWERCASE[];
  *   JKL  MNO  PQR
  *   STU  VWX  YZ 
  */
+#if T3_INCLUDE_LAYOUT_UPPERCASE
 extern const char T3_LAYOUT_UPPERCASE[];
+#endif
 
 /**
  * A pre-defined keyboard with numbers:
@@ -43,7 +82,9 @@ extern const char T3_LAYOUT_UPPERCASE[];
  *   4    5    6
  *   7    8    9
  */
+#if T3_INCLUDE_LAYOUT_NUMBERS
 extern const char T3_LAYOUT_NUMBERS[];
+#endif
 
 /**
  * A pre-defined keyboard with punctuation, operators, etc.:
@@ -51,7 +92,9 @@ extern const char T3_LAYOUT_NUMBERS[];
  *   ,    -    @$#
  *   ?    &%   +*=
  */
+#if T3_INCLUDE_LAYOUT_PUNC
 extern const char T3_LAYOUT_PUNC[];
+#endif
 
 /**
  * A pre-defined keyboard with brackets, slashes, and other
@@ -60,19 +103,15 @@ extern const char T3_LAYOUT_PUNC[];
  *   /    \    []
  *   |_   ~^`  ¢½
  */
+#if T3_INCLUDE_LAYOUT_BRACKETS
 extern const char T3_LAYOUT_BRACKETS[];
+#endif
 
 /**
  * The maximum number of characters that the user may enter.
  * You may change this in the c file.
  */
 extern const uint8_t T3_MAXLENGTH;
-
-/**
- * Whether diagnostic information of keyboard events should be logged.
- * You may toggle this in the c file.
- */
-extern const bool T3_LOGGING;
 
 /**
  * The T3Window type.
@@ -133,17 +172,17 @@ typedef void (*T3CloseHandler)(const char * text);
  *              that the user may cycle through using the UP button.
  *              This may be null.
  * @param count1  The number of keyboard layouts in set1.
- *                 This should be 0 if set1 is null.
+ *                This should be 0 if set1 is null.
  * @param set2  A pointer to an array of strings containing the keyboard layouts
  *              that the user may cycle through using the SELECT button.
  *              This may be null.
  * @param count2  The number of keyboard layouts in set2.
- *                 This should be 0 if set2 is null.
+ *                This should be 0 if set2 is null.
  * @param set3  A pointer to an array of strings containing the keyboard layouts
  *              that the user may cycle through using the DOWN button.
  *              This may be null.
  * @param count3  The number of keyboard layouts in set3.
- *                 This should be 0 if set3 is null.
+ *                This should be 0 if set3 is null.
  * @param closeHandler  The T3CloseHandler to fire when the keyboard closes.
  *                      This may be null.
  * @return A pointer to a new T3Window.
