@@ -96,7 +96,7 @@ Sets a pre-defined blue color theme to the window.
 ### T3_SET_THEME_RED(t3window)
 Sets a pre-defined red color theme to the window.
 
-## T3_SET_THEME_GREEN(t3window)
+### T3_SET_THEME_GREEN(t3window)
 Sets a pre-defined green color theme to the window.
 
 ## Constants
