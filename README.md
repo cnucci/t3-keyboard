@@ -38,7 +38,7 @@ T3Window * myT3Window = t3window_create(
 ```
 #### 5. (Optional) Change the keyboard colors:
 ```c
-t3window_set_colors(t3window, GColorPictonBlue,
+t3window_set_colors(myT3Window, GColorPictonBlue,
 	GColorBlueMoon,	GColorWhite,
 	GColorElectricBlue,	GColorDukeBlue,
 	GColorWhite, GColorBlack,
@@ -46,7 +46,7 @@ t3window_set_colors(t3window, GColorPictonBlue,
 ```
 Or use predefined themes:
 ```c
-T3_SET_THEME_BLUE(t3window);
+T3_SET_THEME_BLUE(myT3Window);
 ```
 #### 5. Show the window:
 ```c
