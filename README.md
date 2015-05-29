@@ -44,7 +44,7 @@ t3window_set_colors(myT3Window, GColorPictonBlue,
 	GColorWhite, GColorBlack,
 	GColorElectricBlue, GColorDukeBlue);
 ```
-Or use predefined themes:
+Or use predefined themes (more to be added over time):
 ```c
 T3_SET_THEME_BLUE(myT3Window);
 ```
@@ -84,8 +84,20 @@ Whether to build the pre-defined punctuation keyboard into the app. It is recomm
 ### T3_INCLUDE_LAYOUT_BRACKETS
 Whether to build the pre-defined bracket keyboard into the app. It is recommended that you set this to 0 if you are not using it in order to reduce memory usage.
 
-### 3_MAXLENGTH
+### T3_MAXLENGTH
 The maximum number of characters that the user may enter.
+
+### T3_SET_THEME_GRAY(t3window)
+Sets a pre-defined gray color theme to the window. (Default theme)
+
+### T3_SET_THEME_BLUE(t3window)
+Sets a pre-defined blue color theme to the window.
+
+### T3_SET_THEME_RED(t3window)
+Sets a pre-defined red color theme to the window.
+
+## T3_SET_THEME_GREEN(t3window)
+Sets a pre-defined green color theme to the window.
 
 ## Constants
 ### const char T3_LAYOUT_LOWERCASE[]
