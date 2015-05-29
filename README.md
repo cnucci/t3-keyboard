@@ -28,13 +28,28 @@ void myCloseHandler(const char * text) {
     // Do something
 }
 ```
-#### 4. Create the window and show it:
+#### 4. Create the window:
 ```c
 T3Window * myT3Window = t3window_create(
     keyboardSet1, 2,
     keyboardSet2, 1,
     keyboardSet3, 2,
     (T3CloseHandler)myCloseHandler);
+```
+#### 5. (Optional) Change the keyboard colors:
+```c
+t3window_set_colors(t3window, GColorPictonBlue,
+	GColorBlueMoon,	GColorWhite,
+	GColorElectricBlue,	GColorDukeBlue,
+	GColorWhite, GColorBlack,
+	GColorElectricBlue, GColorDukeBlue);
+```
+Or use predefined themes:
+```c
+T3_SET_THEME_BLUE(t3window);
+```
+#### 5. Show the window:
+```c
 t3window_show(myT3Window, true);
 ```
 
@@ -68,6 +83,9 @@ Whether to build the pre-defined punctuation keyboard into the app. It is recomm
 
 ### T3_INCLUDE_LAYOUT_BRACKETS
 Whether to build the pre-defined bracket keyboard into the app. It is recommended that you set this to 0 if you are not using it in order to reduce memory usage.
+
+### 3_MAXLENGTH
+The maximum number of characters that the user may enter.
 
 ## Constants
 ### const char T3_LAYOUT_LOWERCASE[]
@@ -114,9 +132,6 @@ This is a pre-defined keyboard layout with brackets, slashes, and other miscella
 |()|<>|{}|
 |/|\\|[]|
 |&#124;_|~^\`|¢½|
-
-### const uint8_t T3_MAXLENGTH
-The maximum number of characters that the user may enter. This is currently set to 24 and may be changed in the c-file.
 
 ## Structures
 ### T3Window
@@ -165,6 +180,47 @@ Destroys a ```T3Window``` previously created by ```t3window_create()```.
 |Parameter|Description|
 |---|---|
 |**window**|The ```T3Window``` to destroy.|
+
+### t3window_set_colors
+```c
+void t3window_set_colors(
+	T3Window * window, GColor background,
+	GColor keyFace, GColor keyText,
+	GColor keyHighlight, GColor keyShadow,
+	GColor editBackground, GColor editText,
+	GColor editHighlight, GColor editShadow)
+```
+Sets the window colors if color is supported. Pressed key colors are inferred, but they may be overridden using ```t3_window_set_pressed_key_colors()```. If not called, a default scheme is used.
+
+|Parameter|Description|
+|---|---|
+|**window**|The ```T3Window``` whose colors to set.|
+|**background**|The background color of the window.|
+|**keyFace**|The primary color of the keys.|
+|**keyText**|The color of the key text.|
+|**keyHighlight**|The highlight color of the keys.|
+|**keyShadow**|The shadow color of the keys.|
+|**editBackground**|The background color of the edit area.|
+|**editText**|The color of the edit area text.|
+|**editHighlight**|The highlight color of the edit area.|
+|**editShadow**|The shadow color of the edit area.|
+
+### t3window_set_pressed_key_colors
+```c
+void t3window_set_pressed_key_colors(
+	T3Window * window,
+	GColor keyFace, GColor keyText,
+	GColor keyHighlight, GColor keyShadow)
+```
+Overrides the colors used for a key that is pressed. This is called with inferred colors by ```t3window_set_colors()```. Note that a pressed key is presented as sunken, so the highlight is on the bottom and right sides and the shadow is on the top and left sides.
+
+|Parameter|Description|
+|---|---|
+|**window**|The ```T3Window``` whose colors to set.|
+|**keyFace**|The primary color of the pressed key.|
+|**keyText**|The color of the pressed key text.|
+|**keyHighlight**|The highlight color of the pressed key.|
+|**keyShadow**|The shadow color of the pressed key.|
 
 ### t3window_show
 ```c

@@ -52,17 +52,15 @@ const char T3_LAYOUT_BRACKETS[] =
 	"/\0\0\0"  "\\\0\0\0"  "[]\0\0"
 	"|_\0\0"   "~^`\0"     "¢½\0";
 #endif
-
-const uint8_t T3_MAXLENGTH = 24;
-
-const uint8_t _T3_KEYBOARD_SIZE = 9 * 4;
-const uint8_t _T3_X_OFFSET = 8;
-const uint8_t _T3_Y_OFFSET = 24;
-const uint8_t _T3_X_SPACING = 44;
-const uint8_t _T3_Y_SPACING = 40;
-const uint8_t _T3_BUTTON_WIDTH = 38;
-const uint8_t _T3_BUTTON_HEIGHT = 24;
-const uint32_t _T3_MODE_TIMEOUT_IN_MS = 600;
+	
+#define _T3_KEYBOARD_SIZE 9 * 4
+#define _T3_X_OFFSET 7
+#define _T3_Y_OFFSET 74
+#define _T3_X_SPACING 45
+#define _T3_Y_SPACING 31
+#define _T3_BUTTON_WIDTH 40
+#define _T3_BUTTON_HEIGHT 26
+#define _T3_MODE_TIMEOUT_IN_MS 600
 
 typedef struct _t3_T3Window {
 	Window * window;
@@ -74,15 +72,38 @@ typedef struct _t3_T3Window {
 	uint8_t row;
 	uint8_t col;
 	char singleChars[3][2];
-	TextLayer * buttons[9];
-	TextLayer * inputLayer;
-	InverterLayer * inverter;
-	char * inputString;
+	Layer * buttons[9];
+	Layer * inputLayer;
+	char inputString[T3_MAXLENGTH + 1];
 	uint8_t inputLength;
-	bool inverterShowing;
 	bool selectionMode;
 	AppTimer * timer;
+	#if PBL_COLOR
+	GColor background;
+	GColor keyFace;
+	GColor keyText;
+	GColor keyHighlight;
+	GColor keyShadow;
+	GColor editBackground;
+	GColor editText;
+	GColor editHighlight;
+	GColor editShadow;
+	GColor pressedKeyFace;
+	GColor pressedKeyText;
+	GColor pressedKeyHighlight;
+	GColor pressedKeyShadow;
+	#endif
 } T3Window;
+
+typedef struct _t3_InputData {
+	T3Window * t3window;
+} _t3_InputData;
+
+typedef struct _t3_KeyData {
+	T3Window * t3window;
+	uint8_t row;
+	uint8_t col;
+} _t3_KeyData;
 
 bool _t3_validateKeyboard(const char * keyboard);
 void _t3_clickConfigProvider(void * context);
@@ -97,13 +118,11 @@ void _t3_r3_click(ClickRecognizerRef recognizer, void * context);
 void _t3_longclick(T3Window * window, uint8_t button);
 void _t3_click(T3Window * window, uint8_t row);
 void _t3_timerCallback(void * context);
-void _t3_updateInverter(T3Window * window);
-void _t3_hideInverter(T3Window * window);
-void _t3_updateLabels(const T3Window * window);
+void _t3_drawInput(Layer * layer, GContext * ctx);
+void _t3_drawKey(Layer * layer, GContext * ctx);
 void _t3_toggleMode(T3Window * window);
-bool _t3_addChar(T3Window * window, uint8_t pos);
-const char * _t3_getCharGroup(const T3Window * window, int index);
-char * _t3_getSingleChar(T3Window * window, int row);
+bool _t3_addChar(T3Window * window, char c);
+const char * _t3_getCharGroup(const T3Window * window, int row, int col);
 
 T3Window * t3window_create(const char ** set1, uint8_t count1,
 						 const char ** set2, uint8_t count2,
@@ -121,7 +140,7 @@ T3Window * t3window_create(const char ** set1, uint8_t count1,
 		w->set = 3;
 		
 		#if T3_LOGGING
-		APP_LOG(APP_LOG_LEVEL_ERROR, "No T3 keyboards defined!")
+		app_log(APP_LOG_LEVEL_ERROR, "T3Window.c", 141, "No T3 keyboards defined!");
 		#endif
 	}
 	
@@ -138,86 +157,126 @@ T3Window * t3window_create(const char ** set1, uint8_t count1,
 	w->keyboardCounts[1] = count2;
 	w->keyboardCounts[2] = count3;
 	w->closeHandler = closeHandler;
-	
+
 	#if T3_LOGGING
-	APP_LOG(APP_LOG_LEVEL_INFO, "Initializing T3 window")
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 160, "Initializing T3 window");
 	#endif
 	
 	w->window = window_create();
+	#if PBL_PLATFORM_APLITE
 	window_set_fullscreen(w->window, true);
+	#endif
+	#if PBL_BW
 	window_set_background_color(w->window, GColorWhite);
+	#endif
 	window_set_click_config_provider_with_context(w->window,
 		(ClickConfigProvider)_t3_clickConfigProvider, w);
-	
+
 	Layer * windowLayer = window_get_root_layer(w->window);
 	
-	// Create button labels
+	// Create input label
+	w->inputLayer = layer_create_with_data(GRect(4, 4, 136, 64), sizeof(_t3_InputData));
+	_t3_InputData * data = layer_get_data(w->inputLayer);
+	data->t3window = w;
+	layer_set_update_proc(w->inputLayer, _t3_drawInput);
+	layer_add_child(windowLayer, w->inputLayer);
+	
+	// Create button layers
 	for(int8_t r = 0; r < 3; ++r) {
 		for(int8_t c = 0; c < 3; ++c) {
 			uint8_t index = r * 3 + c;
-			
-			TextLayer * layer = text_layer_create(GRect(
-				_T3_X_OFFSET + c * _T3_X_SPACING,
-				_T3_Y_OFFSET + r * _T3_Y_SPACING,
-				_T3_BUTTON_WIDTH,
-				_T3_BUTTON_HEIGHT));
-			text_layer_set_font(layer,
-				fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
-			text_layer_set_text_alignment(layer, GTextAlignmentCenter);
-			text_layer_set_background_color(layer, GColorBlack);
-			text_layer_set_text_color(layer, GColorWhite);
-			layer_add_child(windowLayer, text_layer_get_layer(layer));
+			Layer * layer = layer_create_with_data(
+				GRect(
+					_T3_X_OFFSET + c * _T3_X_SPACING,
+					_T3_Y_OFFSET + r * _T3_Y_SPACING,
+					_T3_BUTTON_WIDTH,
+					_T3_BUTTON_HEIGHT),
+				sizeof(_t3_KeyData));
+			_t3_KeyData * data = layer_get_data(layer);
+			data->t3window = w;
+			data->row = r + 1;
+			data->col = c + 1;
+			layer_set_update_proc(layer, _t3_drawKey);
+			layer_add_child(windowLayer, layer);
 			
 			w->buttons[index] = layer;
 		}
 	}
 	
-	_t3_updateLabels(w);
-
-	// Create inverter layer
-	w->inverter = inverter_layer_create(
-		GRect(0, 0, _T3_BUTTON_WIDTH - 2, _T3_BUTTON_HEIGHT - 2));
-	Layer * layer = inverter_layer_get_layer(w->inverter);
-	layer_set_hidden(layer, true);
-	layer_add_child(windowLayer, layer);
-	w->inverterShowing = false;
-
-	// Create input label
-	w->inputLayer = text_layer_create(GRect(10, 138, 124, 30));
-	text_layer_set_font(w->inputLayer,
-		fonts_get_system_font(FONT_KEY_GOTHIC_24));
-	layer_add_child(windowLayer, text_layer_get_layer(w->inputLayer));
+	#if PBL_COLOR
+	T3_SET_THEME_GRAY(w);
+	#endif
+	
+	w->singleChars[0][1] = '\0';
+	w->singleChars[1][1] = '\0';
+	w->singleChars[2][1] = '\0';
 	
 	// Initialize input
-	w->inputString = malloc(T3_MAXLENGTH + 1);
-	for(int8_t i = 0; i < T3_MAXLENGTH; ++i)
+	for(uint8_t i = 0; i <= T3_MAXLENGTH; ++i)
 		w->inputString[i] = '\0';
 	w->inputLength = 0;
 	
 	#if T3_LOGGING
-	APP_LOG(APP_LOG_LEVEL_INFO, "T3 window initialized")
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 228, "T3 window initialized");
 	#endif
 	
 	return w;
 }
 
+#if PBL_COLOR
+void t3window_set_colors(T3Window * window, GColor background,
+						 GColor keyFace, GColor keyText,
+						 GColor keyHighlight, GColor keyShadow,
+						 GColor editBackground, GColor editText,
+						 GColor editHighlight, GColor editShadow) {
+	#if T3_LOGGING
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 241, "Setting T3 window colors");
+	#endif
+		
+	window->background = background;
+	window->keyFace = keyFace;
+	window->keyText = keyText;
+	window->keyHighlight = keyHighlight;
+	window->keyShadow = keyShadow;
+	window->editBackground = editBackground;
+	window->editText = editText;
+	window->editHighlight = editHighlight;
+	window->editShadow = editShadow;
+	
+	window_set_background_color(window->window, background);
+	
+	t3window_set_pressed_key_colors(window, keyShadow, keyText, keyHighlight, keyShadow);
+}
+
+void t3window_set_pressed_key_colors(T3Window * window,
+									GColor keyFace, GColor keyText,
+									GColor keyHighlight, GColor keyShadow) {
+	#if T3_LOGGING
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 263, "Setting T3 window pressed key colors");
+	#endif
+		
+	window->pressedKeyFace = keyFace;
+	window->pressedKeyText = keyText;
+	window->pressedKeyHighlight = keyHighlight;
+	window->pressedKeyShadow = keyShadow;
+}
+#endif
+
 void t3window_destroy(T3Window * window) {
 	#if T3_LOGGING
-	APP_LOG(APP_LOG_LEVEL_INFO, "Destroying T3 window")
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 275, "Destroying T3 window");
 	#endif
 	
-	free(window->inputString);
-	text_layer_destroy(window->inputLayer);
-	inverter_layer_destroy(window->inverter);
+	layer_destroy(window->inputLayer);
 	for(int8_t i = 0; i < 9; ++i)
-		text_layer_destroy(window->buttons[i]);
+		layer_destroy(window->buttons[i]);
 	window_destroy(window->window);
 	free(window);
 }
 
 void t3window_show(const T3Window * window, bool animated) {
 	#if T3_LOGGING
-	APP_LOG(APP_LOG_LEVEL_INFO, "Showing T3 window")
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 288, "Showing T3 window");
 	#endif
 	
 	window_stack_push(window->window, animated);
@@ -225,19 +284,18 @@ void t3window_show(const T3Window * window, bool animated) {
 
 void t3window_set_text(T3Window * window, const char * text) {
 	#if T3_LOGGING
-	APP_LOG(APP_LOG_LEVEL_INFO, "Setting T3 window text: $s", text)
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 296, "Setting T3 window text: %s", text);
 	#endif
 	
 	window->inputLength = strlen(text);
 	if(window->inputLength > 0)
-		strncpy(window->inputString, text, window->inputLength);
-	window->inputString[window->inputLength] = '\0';
-	text_layer_set_text(window->inputLayer, window->inputString);
+		strncpy(window->inputString, text, T3_MAXLENGTH);
+	layer_mark_dirty(window->inputLayer);
 }
 
 const char * t3window_get_text(const T3Window * window) {
 	#if T3_LOGGING
-	APP_LOG(APP_LOG_LEVEL_INFO, "Getting T3 window text")
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 308, "Getting T3 window text");
 	#endif
 	
 	return window->inputString;
@@ -264,40 +322,40 @@ void _t3_clickConfigProvider(void * context) {
 
 void _t3_backspace_click(ClickRecognizerRef recognizer, void * context) {
 	#if T3_LOGGING
-	APP_LOG(APP_LOG_LEVEL_INFO, "Backspace")
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 335, "Backspace");
 	#endif
 	
 	T3Window * w = (T3Window*)context;
 	if(w->inputLength > 0) {
 		w->inputString[--(w->inputLength)] = '\0';
-		text_layer_set_text(w->inputLayer, w->inputString);
+		layer_mark_dirty(w->inputLayer);
 	}
 }
 
 void _t3_back_click(ClickRecognizerRef recognizer, void * context) {
 	#if T3_LOGGING
-	APP_LOG(APP_LOG_LEVEL_INFO, "Back clicked")
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 347, "Back clicked");
 	#endif
 		
 	T3Window * w = (T3Window*)context;
 	if(w->timer != NULL) {
 		#if T3_LOGGING
-		APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling timer")
+		app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 353, "Cancelling timer");
 		#endif
 
 		app_timer_cancel(w->timer);
 		w->row = 0;
 		w->col = 0;
-		_t3_hideInverter(w);
+		// **************************************************** may need to refresh
 	} else if(w->selectionMode) {
 		#if T3_LOGGING
-		APP_LOG(APP_LOG_LEVEL_INFO, "Cancelling char selection")
+		app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 362, "Cancelling char selection");
 		#endif
 		
 		_t3_toggleMode(w);
 	} else {
 		#if T3_LOGGING
-		APP_LOG(APP_LOG_LEVEL_INFO, "Popping window")
+		app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 368, "Popping window");
 		#endif
 		
 		window_stack_pop(true);
@@ -338,57 +396,56 @@ void _t3_longclick(T3Window * window, uint8_t button) {
 		if(window->set == button) {
 			if(window->keyboardCounts[button] > 1) {
 				#if T3_LOGGING
-				APP_LOG(APP_LOG_LEVEL_INFO, "Cycling keyboard")
+				app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 409, "Cycling keyboard");
 				#endif
 				
 				if(++(window->kb) >= window->keyboardCounts[button])
 					window->kb = 0;
-				_t3_updateLabels(window);
 			}
 		} else {
 			#if T3_LOGGING
-			APP_LOG(APP_LOG_LEVEL_INFO, "Changing keyboard set")
+			app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 417, "Changing keyboard set");
 			#endif
 			
 			window->set = button;
 			window->kb = 0;
-			_t3_updateLabels(window);
 		}
+		layer_mark_dirty(window_get_root_layer(window->window));
 	}
 }
 
 void _t3_click(T3Window * window, uint8_t row) {
 	if(window->selectionMode) {
-		_t3_addChar(window, row);
+		_t3_addChar(window, window->singleChars[row - 1][0]);
 		_t3_toggleMode(window);
 	} else {
 		if(window->row != row) {
 			#if T3_LOGGING
-			APP_LOG(APP_LOG_LEVEL_INFO, "Changing row")
+			app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 434, "Changing row");
 			#endif
 			
 			window->row = row;
 			window->col = 1;
-			_t3_updateInverter(window);
+			layer_mark_dirty(window_get_root_layer(window->window));
 		} else {
 			#if T3_LOGGING
-			APP_LOG(APP_LOG_LEVEL_INFO, "Cycling column")
+			app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 442, "Cycling column");
 			#endif
 			
 			if(++(window->col) > 3)
 				window->col = 1;
-			_t3_updateInverter(window);
+			layer_mark_dirty(window_get_root_layer(window->window));
 		}
 		
 		if(window->timer == NULL) {
 			#if T3_LOGGING
-			APP_LOG(APP_LOG_LEVEL_INFO, "Starting timer")
+			app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 452, "Starting timer");
 			#endif
 			
 			window->timer = app_timer_register(_T3_MODE_TIMEOUT_IN_MS, _t3_timerCallback, window);
 		} else {
 			#if T3_LOGGING
-			APP_LOG(APP_LOG_LEVEL_INFO, "Rescheduling timer")
+			app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 458, "Rescheduling timer");
 			#endif
 			
 			app_timer_reschedule(window->timer, _T3_MODE_TIMEOUT_IN_MS);
@@ -398,129 +455,168 @@ void _t3_click(T3Window * window, uint8_t row) {
 
 void _t3_timerCallback(void * context) {
 	#if T3_LOGGING
-	APP_LOG(APP_LOG_LEVEL_INFO, "Timer timeout")
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 468, "Timer timeout");
 	#endif
 	
 	T3Window * w = (T3Window*)context;
-	_t3_hideInverter(w);
-	char c = *_t3_getSingleChar(w, 1);
-	if(c == '\0') {
-		_t3_addChar(w, 1);
+	const char * text = _t3_getCharGroup(w, w->row, w->col);
+	if(text[1] == '\0') {
+		_t3_addChar(w, text[0]);
 		w->row = 0;
 		w->col = 0;
 	} else
 		_t3_toggleMode(w);
 	w->timer = NULL;
+	layer_mark_dirty(window_get_root_layer(w->window));
 }
 
-void _t3_updateInverter(T3Window * window) {
-	if(window->row == 0 && window->col == 0)
-		_t3_hideInverter(window);
-	else {
-		#if T3_LOGGING
-		APP_LOG(APP_LOG_LEVEL_INFO, "Moving inverter")
-		#endif
+void _t3_drawInput(Layer * layer, GContext * context) {
+	GRect bounds = layer_get_bounds(layer);
+	_t3_InputData * data = layer_get_data(layer);
+	
+	#if PBL_BW
+	graphics_context_set_stroke_color(context, GColorBlack);
+	graphics_draw_rect(context, bounds);
+	graphics_context_set_text_color(context, GColorBlack);
+	#endif
 		
-		Layer * layer = inverter_layer_get_layer(window->inverter);
-		layer_set_frame(layer, GRect(
-			_T3_X_OFFSET + ((window->col - 1) * _T3_X_SPACING) + 1,
-			_T3_Y_OFFSET + ((window->row - 1) * _T3_Y_SPACING) + 1,
-			_T3_BUTTON_WIDTH - 2,
-			_T3_BUTTON_HEIGHT - 2));
-		if(!window->inverterShowing) {
-			layer_set_hidden(layer, false);
-			window->inverterShowing = true;
-		}
-	}
-}
-
-void _t3_hideInverter(T3Window * window) {
-	if(window->inverterShowing) {
-		#if T3_LOGGING
-		APP_LOG(APP_LOG_LEVEL_INFO, "Hiding inverter")
-		#endif
-		
-		layer_set_hidden(inverter_layer_get_layer(window->inverter), true);
-		window->inverterShowing = false;
-	}
-}
-
-void _t3_updateLabels(const T3Window * window) {
-	#if T3_LOGGING
-	APP_LOG(APP_LOG_LEVEL_INFO, "Updating labels")
+	#if PBL_COLOR
+	uint8_t h = bounds.size.h - 1;
+	uint8_t w = bounds.size.w - 1;
+	// Background
+	graphics_context_set_fill_color(context, data->t3window->editBackground);
+	graphics_fill_rect(context, bounds, 0, GCornerNone);
+	// Shadow
+	graphics_context_set_stroke_color(context, data->t3window->editShadow);
+	graphics_draw_line(context, bounds.origin, GPoint(w, 0));
+	graphics_draw_line(context, bounds.origin, GPoint(0, h));
+	// Highlight
+	graphics_context_set_stroke_color(context, data->t3window->editHighlight);
+	graphics_draw_line(context, GPoint(1, h), GPoint(w, h));
+	graphics_draw_line(context, GPoint(w, 1), GPoint(w, h));
+	// Text
+	graphics_context_set_text_color(context, data->t3window->editText);
 	#endif
 	
-	for(int r = 0; r < 3; ++r) {
-		for(int c = 0; c < 3; ++c) {
-			uint8_t index = r * 3 + c;
-			TextLayer * layer = window->buttons[index];
-			const char * group = _t3_getCharGroup(window, index);
-			text_layer_set_text(layer, group);
+	bounds.origin.x += 2;
+	bounds.origin.y += 2;
+	bounds.size.w -= 4;
+	bounds.size.h -= 4;
+	graphics_draw_text(context, data->t3window->inputString, fonts_get_system_font(FONT_KEY_GOTHIC_24),
+		bounds, GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+}
+
+void _t3_drawKey(Layer * layer, GContext * context) {
+	GRect bounds = layer_get_bounds(layer);
+	_t3_KeyData * data = layer_get_data(layer);
+	
+	if(!data->t3window->selectionMode || data->col == 2) {
+		const char * text;
+		if(data->t3window->selectionMode) {
+			text = data->t3window->singleChars[data->row - 1];
+			if(text == NULL)
+				return;
+		} else
+			text = _t3_getCharGroup(data->t3window, data->row, data->col);
+
+		bool isPressed = !data->t3window->selectionMode
+			&& data->row == data->t3window->row
+			&& data->col == data->t3window->col;
+
+		#if PBL_BW
+		if(isPressed) {
+			graphics_context_set_stroke_color(context, GColorBlack);
+			graphics_draw_rect(context, bounds);
+			graphics_context_set_text_color(context, GColorBlack);
+		} else {
+			graphics_context_set_fill_color(context, GColorBlack);
+			graphics_fill_rect(context, bounds, 0, GCornerNone);
+			graphics_context_set_text_color(context, GColorWhite);
 		}
+		#endif
+
+		#if PBL_COLOR
+		uint8_t h = _T3_BUTTON_HEIGHT - 1;
+		uint8_t w = _T3_BUTTON_WIDTH - 1;
+		if(isPressed) {
+			// Face
+			graphics_context_set_fill_color(context, data->t3window->pressedKeyFace);
+			graphics_fill_rect(context, bounds, 0, GCornerNone);
+			// Shadow
+			graphics_context_set_stroke_color(context, data->t3window->pressedKeyShadow);
+			graphics_draw_line(context, bounds.origin, GPoint(w, 0));
+			graphics_draw_line(context, bounds.origin, GPoint(0, h));
+			// Highlight
+			graphics_context_set_stroke_color(context, data->t3window->pressedKeyHighlight);
+			graphics_draw_line(context, GPoint(1, h), GPoint(w, h));
+			graphics_draw_line(context, GPoint(w, 1), GPoint(w, h));
+			// Text
+			graphics_context_set_text_color(context, data->t3window->pressedKeyText);
+		} else {
+			// Face
+			graphics_context_set_fill_color(context, data->t3window->keyFace);
+			graphics_fill_rect(context, bounds, 0, GCornerNone);
+			// Highlight
+			graphics_context_set_stroke_color(context, data->t3window->keyHighlight);
+			graphics_draw_line(context, bounds.origin, GPoint(w, 0));
+			graphics_draw_line(context, bounds.origin, GPoint(0, w));
+			// Shadow
+			graphics_context_set_stroke_color(context, data->t3window->keyShadow);
+			graphics_draw_line(context, GPoint(1, h), GPoint(w, h));
+			graphics_draw_line(context, GPoint(w, 1), GPoint(w, h));
+			// Text
+			graphics_context_set_text_color(context, data->t3window->keyText);
+		}
+		#endif
+
+		graphics_draw_text(context, text, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
+			bounds, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 	}
 }
 
 void _t3_toggleMode(T3Window * window) {
 	#if T3_LOGGING
-	APP_LOG(APP_LOG_LEVEL_INFO, "Toggling mode")
+	app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 587, "Toggling mode");
 	#endif
 	
 	window->selectionMode = !window->selectionMode;
 	
-	for(int r = 0; r < 3; ++r) {
-		for(int c = 0; c < 3; ++c) {
-			uint8_t index = r * 3 + c;
-			TextLayer * layer = window->buttons[index];
-			if(c < 2)
-				layer_set_hidden(text_layer_get_layer(layer),
-					window->selectionMode);
-			else {
-				if(window->selectionMode) {
-					char * c = _t3_getSingleChar(window, r);
-					text_layer_set_text(layer, c);
-				} else {
-					const char * group = _t3_getCharGroup(window, index);
-					text_layer_set_text(layer, group);
-				}
-			}
-		}
-	}
-	
-	if(!window->selectionMode) {
+	if(window->selectionMode) {
+		const char * cg = _t3_getCharGroup(window, window->row, window->col);
+		window->singleChars[0][0] = cg[0];
+		window->singleChars[1][0] = cg[1];
+		window->singleChars[2][0] = cg[2];
+	} else {
 		window->row = 0;
 		window->col = 0;
 	}
+	
+	layer_mark_dirty(window_get_root_layer(window->window));
 }
 
-bool _t3_addChar(T3Window * window, uint8_t pos) {
+bool _t3_addChar(T3Window * window, char c) {
 	if(window->inputLength < T3_MAXLENGTH) {
-		char c = *_t3_getSingleChar(window, pos - 1);
 		if(c == '\0')
 			return false;
 		else {
 			#if T3_LOGGING
-			APP_LOG(APP_LOG_LEVEL_INFO, "Adding char: $c", c)
+			app_log(APP_LOG_LEVEL_INFO, "T3Window.c", 611, "Adding char: %c", c);
 			#endif
 
 			window->inputString[(window->inputLength)++] = c;
-			text_layer_set_text(window->inputLayer, window->inputString);
+			layer_mark_dirty(window->inputLayer);
+	
 			return true;
 		}
 	} else
 		return false;
 }
 
-const char * _t3_getCharGroup(const T3Window * window, int index) {
+const char * _t3_getCharGroup(const T3Window * window, int row, int col) {
 	if(window->set < 3) {
 		const char * charset = window->keyboardSets[window->set][window->kb];
+		int index = ((row - 1) * 3) + (col - 1);
 		return &charset[index * 4];
 	} else
 		return NULL;
-}
-
-char * _t3_getSingleChar(T3Window * window, int index) {
-	uint8_t i = ((window->row - 1) * 3) + (window->col - 1);
-	const char * cg = _t3_getCharGroup(window, i);
-	strncpy(window->singleChars[index], &cg[index], 1);
-	return window->singleChars[index];
 }

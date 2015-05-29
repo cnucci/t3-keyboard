@@ -107,11 +107,29 @@ extern const char T3_LAYOUT_PUNC[];
 extern const char T3_LAYOUT_BRACKETS[];
 #endif
 
+#if PBL_COLOR
+/**
+  * Sets a pre-defined gray color theme to the window.
+  */
+#define T3_SET_THEME_GRAY(t3window) t3window_set_colors(t3window, GColorDarkGray, GColorLightGray, GColorBlack, GColorWhite, GColorBlack, GColorWhite, GColorBlack, GColorLightGray, GColorBlack)
+/**
+  * Sets a pre-defined blue color theme to the window.
+  */
+#define T3_SET_THEME_BLUE(t3window) t3window_set_colors(t3window, GColorPictonBlue, GColorBlueMoon, GColorWhite, GColorElectricBlue, GColorDukeBlue, GColorWhite, GColorBlack, GColorElectricBlue, GColorDukeBlue)
+/**
+  * Sets a pre-defined red color theme to the window.
+  */
+#define T3_SET_THEME_RED(t3window) t3window_set_colors(t3window, GColorBulgarianRose, GColorDarkCandyAppleRed, GColorWhite, GColorRed, GColorBlack, GColorWhite, GColorBlack, GColorDarkCandyAppleRed, GColorBlack)
+/**
+  * Sets a pre-defined green color theme to the window.
+  */
+#define T3_SET_THEME_GREEN(t3window) t3window_set_colors(t3window, GColorDarkGreen, GColorMayGreen, GColorBlack, GColorMintGreen, GColorBlack, GColorWhite, GColorBlack, GColorMintGreen, GColorBlack)
+#endif
+
 /**
  * The maximum number of characters that the user may enter.
- * You may change this in the c file.
  */
-extern const uint8_t T3_MAXLENGTH;
+#define T3_MAXLENGTH 24
 
 /**
  * The T3Window type.
@@ -191,6 +209,48 @@ T3Window * t3window_create(const char ** set1, uint8_t count1,
 						 const char ** set2, uint8_t count2,
 						 const char ** set3, uint8_t count3,
 						 T3CloseHandler closeHandler);
+
+
+#if PBL_COLOR
+/**
+ * Sets the window colors if color is supported.
+ * Pressed key colors are inferred, but they may be overridden
+ * using t3_window_set_pressed_key_colors().
+ * If not called, a default scheme is used.
+ *
+ * @param window  The T3Window whose colors to set.
+ * @param background  The background color of the window.
+ * @param keyFace  The primary color of the keys.
+ * @param keyText  The color of the key text.
+ * @param keyHighlight  The highlight color of the keys.
+ * @param keyShadow  The shadow color of the keys.
+ * @param editBackground  The background color of the edit area.
+ * @param editText  The color of the edit area text.
+ * @param editHighlight  The highlight color of the edit area.
+ * @param editShadow  The shadow color of the edit area.
+ */
+void t3window_set_colors(T3Window * window, GColor background,
+						 GColor keyFace, GColor keyText,
+						 GColor keyHighlight, GColor keyShadow,
+						 GColor editBackground, GColor editText,
+						 GColor editHighlight, GColor editShadow);
+
+/**
+ * Overrides the colors used for a key that is pressed.
+ * Note that a pressed key is presented as sunken,
+ * so the highlight is on the bottom and right sides
+ * and the shadow is on the top and left sides.
+ *
+ * @param window  The T3Window whose pressed key colors to set.
+ * @param keyFace  The primary color of the pressed key.
+ * @param keyText  The color of the pressed key text.
+ * @param keyHighlight  The highlight color of the pressed key.
+ * @param keyShadow  The shadow color of the pressed key.
+ */
+void t3window_set_pressed_key_colors(T3Window * window,
+									GColor keyFace, GColor keyText,
+									GColor keyHighlight, GColor keyShadow);
+#endif
 
 /**
  * Destroys a T3Window previously created by t3window_create().
