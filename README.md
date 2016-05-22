@@ -18,9 +18,9 @@ const char * myKeyboardSet[] = {MY_KEYBOARD_LAYOUT};
 ```
 Or use predefined ones:
 ```c
-const char * keyboardSet1[] = {T3_KB_LOWERCASE, T3_KB_UPPERCASE};
-const char * keyboardSet2[] = {T3_KB_NUMBERS};
-const char * keyboardSet3[] = {T3_KB_SPECIAL1, T3_KB_SPECIAL2};
+const char * keyboardSet1[] = {T3_LAYOUT_LOWERCASE, T3_LAYOUT_UPPERCASE};
+const char * keyboardSet2[] = {T3_LAYOUT_NUMBERS};
+const char * keyboardSet3[] = {T3_LAYOUT_SPECIAL1, T3_LAYOUT_SPECIAL2};
 ```
 #### 3. Define a handler to get the entered text:
 ```c
