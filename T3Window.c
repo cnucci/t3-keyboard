@@ -163,10 +163,10 @@ T3Window * t3window_create(const char ** set1, uint8_t count1,
 	#endif
 	
 	w->window = window_create();
-	#if PBL_PLATFORM_APLITE
+	#ifdef PBL_SDK_2
 	window_set_fullscreen(w->window, true);
 	#endif
-	#if PBL_BW
+	#ifdef PBL_BW
 	window_set_background_color(w->window, GColorWhite);
 	#endif
 	window_set_click_config_provider_with_context(w->window,
